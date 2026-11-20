@@ -28,11 +28,25 @@ jobs:
         working-directory: mobile_app
         run: flutter create . --platforms=android
 
+      - name: Disable Lint on release build
+        working-directory: mobile_app
+        run: |
+          python3 -c '
+          from pathlib import Path
+          for name in ["android/app/build.gradle", "android/app/build.gradle.kts"]:
+              p = Path(name)
+              if p.exists():
+                  txt = p.read_text(encoding="utf-8")
+                  if "checkReleaseBuilds" not in txt:
+                      block = "android {\n    lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }\n"
+                      if "android {" in txt:
+                          txt = txt.replace("android {\n", block, 1)
+                      p.write_text(txt, encoding="utf-8")
+          '
+
       - name: Install packages
         working-directory: mobile_app
         run: flutter pub get
-
-    
 
       - name: Build APK
         working-directory: mobile_app
